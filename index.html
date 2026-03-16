@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breeze: Find your perfect stay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e; --ink2: #2d2d44; --ink3: #6b6b85; --mist: #9898b0;
+    --white: #ffffff; --off: #f9f8ff; --snow: #f4f3fc; --cloud: #eceaf8;
+    --lavender: #e8e4f9; --sky: #e0f0fb; --mint: #dff4ee;
+    --indigo: #5b5bd6; --indigo-lt: rgba(91,91,214,0.08); --indigo-bd: rgba(91,91,214,0.18);
+    --teal: #0eb5a0; --teal-lt: rgba(14,181,160,0.08); --teal-bd: rgba(14,181,160,0.2);
+    --gold: #f5a623; --gold-lt: rgba(245,166,35,0.1); --gold-bd: rgba(245,166,35,0.22);
+    --danger: #e8394a; --danger-lt: rgba(232,57,74,0.07); --danger-bd: rgba(232,57,74,0.18);
+    --border: rgba(26,26,46,0.07); --border-md: rgba(26,26,46,0.12);
+    --radius: 18px; --radius-sm: 11px;
+    --shadow-sm: 0 1px 8px rgba(26,26,46,0.06);
+    --shadow: 0 4px 24px rgba(26,26,46,0.08);
+    --shadow-lg: 0 12px 48px rgba(26,26,46,0.11);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--off); color: var(--ink); min-height: 100vh; font-size: 14px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  /* ── ONBOARDING ── */
+  #onboarding {
+    position: fixed; inset: 0; z-index: 1000;
+    background: linear-gradient(160deg, #f0eeff 0%, #e8f4ff 50%, #e4faf5 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 24px; transition: opacity 0.5s ease;
+  }
+  #onboarding.hidden { opacity: 0; pointer-events: none; }
+
+  .ob-logo { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 300; letter-spacing: -0.02em; color: var(--ink); display: flex; align-items: center; gap: 10px; margin-bottom: 44px; }
+  .ob-logo-mark { width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #a8d8f0 0%, #c4b5fd 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+  .ob-progress { display: flex; gap: 8px; margin-bottom: 36px; }
+  .ob-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cloud); transition: all 0.3s; }
+  .ob-dot.active { background: var(--indigo); transform: scale(1.2); }
+  .ob-dot.done { background: var(--teal); }
+
+  .ob-steps-wrap { width: 100%; max-width: 580px; }
+  .ob-step { display: none; flex-direction: column; align-items: center; text-align: center; width: 100%; }
+  .ob-step.active { display: flex; animation: obFadeIn 0.3s ease both; }
+  @keyframes obFadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+  .ob-step-num { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--indigo); margin-bottom: 10px; opacity: 0.6; }
+  .ob-q { font-family: 'Fraunces', serif; font-size: clamp(28px, 4vw, 46px); font-weight: 300; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 32px; }
+  .ob-q em { font-style: italic; color: var(--indigo); }
+  .ob-hint { font-size: 12px; color: var(--mist); margin-top: 8px; }
+
+  .ob-input { width: 100%; padding: 16px 22px; font-family: 'DM Sans', sans-serif; font-size: 18px; font-weight: 400; border: 1.5px solid var(--border-md); border-radius: var(--radius); background: var(--white); color: var(--ink); outline: none; box-shadow: var(--shadow); transition: border-color 0.2s, box-shadow 0.2s; text-align: center; }
+  .ob-input:focus { border-color: var(--indigo); box-shadow: 0 0 0 4px var(--indigo-lt), var(--shadow); }
+  .ob-input::placeholder { color: var(--mist); }
+
+  .ob-dest-suggestions { width: 100%; background: var(--white); border: 1px solid var(--border-md); border-radius: var(--radius-sm); margin-top: 8px; overflow: hidden; box-shadow: var(--shadow); display: none; }
+  .ob-dest-suggestion { padding: 12px 20px; font-size: 14px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px; transition: background 0.15s; color: var(--ink2); }
+  .ob-dest-suggestion:hover { background: var(--indigo-lt); color: var(--indigo); }
+  .ob-dest-suggestion .dest-flag { font-size: 20px; }
+  .ob-dest-suggestion .dest-info { display: flex; flex-direction: column; }
+  .ob-dest-suggestion .dest-name { font-weight: 600; font-size: 14px; }
+  .ob-dest-suggestion .dest-sub { font-size: 11px; color: var(--mist); }
+
+  .ob-date-row { display: flex; gap: 14px; width: 100%; }
+  .ob-date-box { flex: 1; background: var(--white); border: 1.5px solid var(--border-md); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); cursor: pointer; transition: border-color 0.2s; text-align: center; }
+  .ob-date-box:hover, .ob-date-box.filled { border-color: var(--indigo); }
+  .ob-date-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--mist); margin-bottom: 4px; }
+  .ob-date-val { font-size: 16px; font-weight: 500; color: var(--ink); }
+  .ob-date-val.placeholder { color: var(--mist); font-weight: 300; }
+
+  .ob-priority-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+  .ob-priority-card { background: var(--white); border: 1.5px solid var(--border-md); border-radius: var(--radius-sm); padding: 16px 12px; cursor: pointer; transition: all 0.15s; box-shadow: var(--shadow-sm); text-align: center; user-select: none; }
+  .ob-priority-card:hover { border-color: var(--indigo); background: var(--indigo-lt); transform: translateY(-1px); }
+  .ob-priority-card.selected { border: 2px solid var(--indigo); background: var(--indigo-lt); box-shadow: 0 0 0 3px var(--indigo-lt); }
+  .ob-priority-card[data-key="bugs"] { border-color: var(--danger-bd); background: #fff8f8; }
+  .ob-priority-card[data-key="bugs"] .ob-priority-name { color: var(--danger); }
+  .ob-priority-card[data-key="bugs"].selected, .ob-priority-card[data-key="bugs"].selected:hover { border: 2px solid var(--indigo-bd) !important; background: var(--danger) !important; box-shadow: 0 0 0 3px var(--indigo-lt) !important; }
+  .ob-priority-card[data-key="bugs"].selected .ob-priority-name { color: white !important; }
+  .ob-priority-card[data-key="bugs"].selected .ob-priority-icon { filter: brightness(10) !important; }
+  .ob-priority-card.maxed:not(.selected) { opacity: 0.4; cursor: not-allowed; }
+  .ob-priority-icon { font-size: 22px; margin-bottom: 6px; }
+  .ob-priority-name { font-size: 12px; font-weight: 600; color: var(--ink2); line-height: 1.3; }
+
+  .ob-traveler-grid { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; justify-content: center; }
+  .ob-traveler-opt { background: var(--white); border: 1.5px solid var(--border-md); border-radius: 22px; padding: 10px 20px; cursor: pointer; transition: all 0.15s; font-size: 13px; font-weight: 500; color: var(--ink2); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 7px; }
+  .ob-traveler-opt:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-lt); }
+  .ob-traveler-opt.selected { border-color: var(--indigo); background: var(--indigo); color: white; box-shadow: 0 2px 12px rgba(91,91,214,0.25); }
+
+  .ob-next { margin-top: 28px; background: var(--indigo); color: white; border: none; border-radius: 22px; padding: 14px 40px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 18px rgba(91,91,214,0.3); display: flex; align-items: center; gap: 8px; }
+  .ob-next:hover { background: #4747c2; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(91,91,214,0.38); }
+  .ob-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .ob-skip { position: absolute; top: 24px; right: 32px; font-size: 12px; color: var(--mist); cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+  .ob-skip:hover { color: var(--ink3); }
+
+  .ob-back { position: absolute; top: 24px; left: 32px; font-size: 12px; color: var(--mist); cursor: pointer; transition: color 0.2s; display: flex; align-items: center; gap: 5px; }
+  .ob-back:hover { color: var(--ink3); }
+
+  /* ── HEADER ── */
+  .site-header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 48px; display: flex; align-items: center; justify-content: space-between; height: 66px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+  .logo { font-family: 'Fraunces', serif; font-size: 27px; font-weight: 300; letter-spacing: -0.02em; color: var(--ink); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .logo-mark { width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #a8d8f0 0%, #c4b5fd 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-accent { color: var(--indigo); }
+  .header-nav { display: flex; align-items: center; gap: 32px; }
+  .header-nav a { font-size: 13px; font-weight: 400; color: var(--ink3); text-decoration: none; cursor: pointer; transition: color 0.2s; }
+  .header-nav a:hover { color: var(--ink); }
+  .header-cta { background: var(--indigo); color: white; border: none; border-radius: 22px; padding: 9px 22px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 12px rgba(91,91,214,0.28); }
+  .header-cta:hover { background: #4747c2; transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero { background: linear-gradient(160deg, #f0eeff 0%, #e8f4ff 50%, #e4faf5 100%); padding: 80px 48px 68px; position: relative; overflow: hidden; border-bottom: 1px solid var(--border); }
+  .hero-orb1 { position: absolute; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(168,216,240,0.35) 0%, transparent 65%); right: -60px; top: -140px; pointer-events: none; }
+  .hero-orb2 { position: absolute; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(196,181,253,0.25) 0%, transparent 65%); left: 35%; bottom: -100px; pointer-events: none; }
+  .hero-orb3 { position: absolute; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(14,181,160,0.12) 0%, transparent 65%); right: 18%; top: 20%; pointer-events: none; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: white; border: 1px solid var(--indigo-bd); border-radius: 22px; padding: 5px 14px; font-size: 11px; font-weight: 600; color: var(--indigo); margin-bottom: 26px; letter-spacing: 0.07em; text-transform: uppercase; box-shadow: var(--shadow-sm); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.35;transform:scale(0.65);} }
+  .hero h1 { font-family: 'Fraunces', serif; font-size: clamp(44px,5.5vw,70px); font-weight: 300; line-height: 1.04; letter-spacing: -0.02em; color: var(--ink); max-width: 680px; margin-bottom: 20px; }
+  .hero-sub { font-size: 16px; color: var(--ink3); max-width: 520px; font-weight: 300; margin-bottom: 46px; line-height: 1.75; }
+  .search-card { background: var(--white); border-radius: var(--radius); display: flex; align-items: stretch; max-width: 820px; overflow: hidden; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+  .search-seg { flex: 1; padding: 16px 22px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; cursor: pointer; transition: background 0.15s; }
+  .search-seg:hover { background: var(--off); }
+  .search-seg-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); }
+  .search-seg-val { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .search-btn { background: var(--indigo); color: white; border: none; padding: 0 32px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px; }
+  .search-btn:hover { background: #4747c2; }
+
+  /* ── TRUST STRIP ── */
+  .trust-strip { background: var(--white); border-bottom: 1px solid var(--border); padding: 11px 48px; display: flex; align-items: center; gap: 24px; overflow-x: auto; }
+  .trust-item { display: flex; align-items: center; gap: 7px; white-space: nowrap; font-size: 12px; color: var(--ink3); }
+  .trust-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+  .trust-sep { color: var(--border-md); }
+
+  /* ── RESULTS CONTEXT BANNER ── */
+  .context-banner { background: var(--indigo-lt); border-bottom: 1px solid var(--indigo-bd); padding: 10px 48px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--indigo); font-weight: 500; display: none; }
+  .context-banner.visible { display: flex; }
+  .context-banner-tag { background: var(--indigo); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; }
+
+  /* ── BODY ── */
+  .body-wrap { display: flex; max-width: 1400px; margin: 0 auto; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { width: 292px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 28px 22px; background: var(--white); position: sticky; top: 66px; height: calc(100vh - 66px); overflow-y: auto; }
+  .sidebar::-webkit-scrollbar { width: 3px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--cloud); border-radius: 2px; }
+
+  .bug-card { background: #fff5f5; border: 1px solid var(--danger-bd); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 24px; position: relative; overflow: hidden; }
+  .bug-card::after { content: '🪲'; position: absolute; right: -4px; top: -4px; font-size: 56px; opacity: 0.07; transform: rotate(18deg); pointer-events: none; }
+  .bug-card-title { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; color: var(--danger); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 7px; }
+  .bug-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }
+  .bug-desc { font-size: 11px; color: rgba(232,57,74,0.6); line-height: 1.55; margin-bottom: 13px; }
+  .bug-sl-head { display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; color: rgba(232,57,74,0.65); margin-bottom: 6px; }
+  .bug-v { color: var(--danger); font-weight: 700; }
+  input[type=range].bug-range { -webkit-appearance: none; width: 100%; height: 3px; border-radius: 2px; background: rgba(232,57,74,0.15); outline: none; cursor: pointer; margin-bottom: 12px; }
+  input[type=range].bug-range::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%; background: var(--danger); border: 2px solid #fff5f5; cursor: pointer; }
+  .bug-presets { display: flex; gap: 6px; }
+  .bug-preset { flex: 1; padding: 5px 4px; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; border: 1px solid var(--danger-bd); background: transparent; color: rgba(232,57,74,0.5); transition: all 0.15s; }
+  .bug-preset.active { background: var(--danger); border-color: var(--danger); color: white; }
+
+  .sb-sec { margin-bottom: 4px; }
+  .sb-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .sb-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .sb-div { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .sl-row { margin-bottom: 14px; }
+  .sl-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .sl-name { font-size: 13px; font-weight: 400; color: var(--ink2); display: flex; align-items: center; gap: 6px; }
+  .sl-val { font-size: 12px; font-weight: 700; color: var(--indigo); min-width: 16px; text-align: right; }
+
+  input[type=range].main-range { -webkit-appearance: none; width: 100%; height: 3px; border-radius: 2px; background: var(--lavender); outline: none; cursor: pointer; }
+  input[type=range].main-range::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%; background: var(--indigo); border: 2px solid white; box-shadow: 0 1px 6px rgba(91,91,214,0.28); cursor: pointer; transition: transform 0.15s; }
+  input[type=range].main-range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .price-display { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 300; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 8px; }
+
+  .more-filters-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: var(--radius-sm); border: 1px dashed var(--border-md); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--indigo); transition: all 0.2s; margin: 4px 0; }
+  .more-filters-btn:hover { background: var(--indigo-lt); border-color: var(--indigo-bd); }
+
+  /* ── RESULTS ── */
+  .results-area { flex: 1; min-width: 0; padding: 28px 36px; background: var(--off); }
+  .pills-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); margin-bottom: 8px; }
+  .pills-row { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
+  .qpill { display: inline-flex; align-items: center; gap: 5px; padding: 7px 15px; border-radius: 22px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-md); background: var(--white); color: var(--ink2); transition: all 0.15s; white-space: nowrap; box-shadow: var(--shadow-sm); }
+  .qpill:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-lt); }
+  .qpill.active { background: var(--indigo); border-color: var(--indigo); color: white; box-shadow: 0 2px 12px rgba(91,91,214,0.25); }
+
+  .results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; margin-top: 8px; }
+  .results-lbl { font-size: 13px; color: var(--mist); }
+  .results-lbl strong { color: var(--ink); font-weight: 600; }
+  .sort-sel { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 7px 12px; border: 1px solid var(--border-md); border-radius: var(--radius-sm); background: var(--white); color: var(--ink2); cursor: pointer; outline: none; box-shadow: var(--shadow-sm); }
+
+  /* ── HOTEL CARD ── */
+  .hcard { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; transition: box-shadow 0.22s, transform 0.22s, border-color 0.22s; cursor: pointer; box-shadow: var(--shadow-sm); animation: fadeUp 0.3s ease both; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);} }
+  .hcard:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--indigo-bd); }
+  .hcard.has-bugs { border-color: var(--danger-bd); }
+
+  .bug-banner { background: linear-gradient(90deg,#fff0f0,#fff5f5); border-bottom: 1px solid var(--danger-bd); padding: 10px 22px; display: flex; align-items: center; gap: 10px; }
+  .bug-emoji { font-size: 22px; animation: wiggle 2.2s ease-in-out infinite; flex-shrink: 0; }
+  @keyframes wiggle { 0%,100%{transform:rotate(0);}15%{transform:rotate(-14deg);}30%{transform:rotate(11deg);}45%{transform:rotate(-9deg);}60%{transform:rotate(7deg);}75%{transform:rotate(-4deg);} }
+  .bug-count { background: var(--danger); color: white; font-size: 10px; font-weight: 800; padding: 2px 9px; border-radius: 10px; }
+  .bug-banner-text { font-size: 11px; color: var(--danger); opacity: 0.75; }
+
+  .top-pick { background: linear-gradient(90deg,var(--indigo),#7c6fe0); color: white; padding: 8px 22px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; }
+  .breeze-score-badge { background: rgba(255,255,255,0.2); border-radius: 8px; padding: 2px 10px; font-size: 13px; font-weight: 700; letter-spacing: 0; text-transform: none; }
+
+  .card-body { display: flex; }
+  .card-thumb { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; position: relative; padding: 26px 12px; border-right: 1px solid var(--border); }
+  .thumb-emoji { font-size: 46px; line-height: 1; }
+  .thumb-sub { font-size: 11px; color: var(--mist); text-align: center; }
+  .match-ring { position: absolute; top: 13px; right: 13px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; border: 2px solid currentColor; }
+  .verified-chip { position: absolute; bottom: 12px; left: 12px; display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: var(--teal); background: var(--teal-lt); border: 1px solid var(--teal-bd); padding: 3px 8px; border-radius: 10px; }
+
+  .card-info { padding: 20px 24px; flex: 1; min-width: 0; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 11px; gap: 12px; }
+  .card-name { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 300; line-height: 1.15; letter-spacing: -0.02em; color: var(--ink); }
+  .card-loc { font-size: 12px; color: var(--mist); margin-top: 3px; }
+  .price-block { text-align: right; flex-shrink: 0; }
+  .price-num { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 300; color: var(--ink); letter-spacing: -0.03em; line-height: 1; }
+  .price-lbl { font-size: 11px; color: var(--mist); margin-top: 2px; }
+
+  .status-row { display: flex; align-items: center; gap: 7px; margin-bottom: 11px; flex-wrap: wrap; }
+  .spill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 8px; }
+  .sp-safe { background: var(--teal-lt); color: var(--teal); border: 1px solid var(--teal-bd); }
+  .sp-caution { background: var(--gold-lt); color: var(--gold); border: 1px solid var(--gold-bd); }
+  .sp-ok { background: var(--teal-lt); color: var(--teal); border: 1px solid var(--teal-bd); }
+  .sp-bad { background: var(--danger-lt); color: var(--danger); border: 1px solid var(--danger-bd); }
+
+  .tags-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 7px; }
+  .tg { background: var(--mint); color: #0a7a6a; border: 1px solid var(--teal-bd); }
+  .tr { background: var(--danger-lt); color: var(--danger); border: 1px solid var(--danger-bd); }
+  .ta { background: var(--gold-lt); color: #a06010; border: 1px solid var(--gold-bd); }
+  .tv { background: var(--indigo-lt); color: var(--indigo); border: 1px solid var(--indigo-bd); }
+  .trn { background: var(--sky); color: #1a6aa0; border: 1px solid rgba(14,130,200,0.2); font-weight: 600; }
+  .trm { background: var(--gold-lt); color: #a06010; border: 1px solid var(--gold-bd); font-weight: 600; }
+  .tro { background: var(--cloud); color: var(--mist); border: 1px solid var(--border-md); font-weight: 600; }
+
+  .score-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .sc-item { display: flex; flex-direction: column; gap: 3px; }
+  .sc-icon { font-size: 13px; }
+  .sc-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--mist); }
+  .sc-val { font-size: 15px; font-weight: 600; font-family: 'Fraunces', serif; line-height: 1.1; }
+  .sc-track { height: 3px; border-radius: 2px; background: var(--cloud); overflow: hidden; margin-top: 2px; }
+  .sc-fill { height: 100%; border-radius: 2px; }
+
+  .loc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--border); }
+  .loc-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--mist); }
+  .loc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .loc-nm { flex: 1; }
+  .loc-d { font-weight: 700; color: var(--ink2); font-size: 11px; }
+
+  .photo-row { display: flex; align-items: center; gap: 8px; padding-top: 10px; margin-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--mist); }
+  .photo-track { flex:1; height:4px; border-radius:2px; background:var(--cloud); overflow:hidden; }
+  .photo-fill { height:100%; border-radius:2px; }
+  .photo-sc { font-size:12px; font-weight:700; }
+
+  .thumb-bg-great { background: linear-gradient(145deg,#edfaf6,#e8f0ff); }
+  .thumb-bg-ok { background: linear-gradient(145deg,#fff9ee,#f0eeff); }
+  .thumb-bg-warn { background: linear-gradient(145deg,#fff5ee,#fff0e8); }
+
+  .empty { text-align:center; padding:80px 40px; color:var(--mist); }
+  .empty-icon { font-size:40px; margin-bottom:16px; }
+  .empty h3 { font-family:'Fraunces',serif; font-size:28px; font-weight:300; color:var(--ink2); margin-bottom:8px; }
+  .empty p { font-size:13px; }
+
+  .site-footer { background: var(--ink); color: var(--mist); padding: 34px 48px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .footer-logo { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color: white; }
+  .footer-links { display:flex; gap:24px; }
+  .footer-links a { color:var(--mist); text-decoration:none; cursor:pointer; transition:color 0.2s; }
+  .footer-links a:hover { color:white; }
+
+  /* ── COMPACT INLINE CALENDAR ── */
+  .cal-wrap { width: 100%; max-width: 420px; background: var(--white); border: 1.5px solid var(--indigo-bd); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 16px; margin-top: 12px; }
+  .cal-selected-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .cal-selected-box { flex: 1; background: var(--snow); border: 1px solid var(--border-md); border-radius: var(--radius-sm); padding: 8px 12px; transition: all 0.15s; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 0; height: 40px; }
+  .cal-selected-box.active-picking { border-color: var(--indigo); background: var(--indigo-lt); box-shadow: 0 0 0 3px rgba(91,91,214,0.1); }
+  .cal-selected-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--indigo); white-space: nowrap; flex-shrink: 0; }
+  .cal-selected-val { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .cal-selected-val.empty { color: var(--mist); font-weight: 300; font-size: 12px; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-nav-btn { background: none; border: 1px solid var(--border-md); border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--ink2); transition: all 0.15s; }
+  .cal-nav-btn:hover { background: var(--indigo-lt); border-color: var(--indigo-bd); color: var(--indigo); }
+  .cal-month-name { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 300; color: var(--ink); }
+  .cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 4px; }
+  .cal-wd { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mist); text-align: center; padding: 3px 0; }
+  .cal-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+  .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.12s; color: var(--ink2); font-weight: 400; border: none; background: none; }
+  .cal-day:hover:not(.disabled):not(.empty-day) { background: var(--indigo-lt); color: var(--indigo); }
+  .cal-day.today { font-weight: 700; color: var(--indigo); }
+  .cal-day.selected-start { background: var(--indigo); color: white; border-radius: 6px 0 0 6px; }
+  .cal-day.selected-end { background: var(--indigo); color: white; border-radius: 0 6px 6px 0; }
+  .cal-day.selected-start.selected-end { border-radius: 6px; }
+  .cal-day.in-range { background: var(--indigo-lt); color: var(--indigo); border-radius: 0; }
+  .cal-day.disabled { color: var(--cloud); cursor: not-allowed; }
+  .cal-day.empty-day { cursor: default; }
+  .cal-hint { font-size: 11px; color: var(--indigo); font-weight: 500; text-align: center; margin-bottom: 12px; }
+  .cal-divider { height: 1px; background: var(--border); margin: 14px 0; }
+  .cal-actions { display: flex; gap: 8px; }
+  .cal-clear { flex: 1; background: none; border: 1px solid var(--border-md); border-radius: 10px; padding: 10px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink3); cursor: pointer; transition: all 0.15s; }
+  .cal-clear:hover { border-color: var(--danger-bd); color: var(--danger); }
+  .cal-confirm { flex: 2; background: var(--indigo); color: white; border: none; border-radius: 10px; padding: 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 10px rgba(91,91,214,0.25); }
+  .cal-confirm:hover { background: #4747c2; }
+  .cal-confirm:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+
+    .site-header { padding: 0 20px; height: 56px; }
+    .logo { font-size: 22px; }
+    .header-nav a { display: none; }
+    .header-cta { padding: 7px 14px; font-size: 12px; }
+
+    .hero { padding: 40px 20px 36px; }
+    .hero h1 { font-size: 36px; }
+    .hero-eyebrow { font-size: 10px; padding: 4px 12px; text-align: center; }
+    .hero-sub { font-size: 14px; margin-bottom: 28px; }
+    .search-card { flex-direction: column; max-width: 100%; border-radius: var(--radius-sm); }
+    .search-seg { border-right: none; border-bottom: 1px solid var(--border); padding: 12px 16px; }
+    .search-seg:last-of-type { border-bottom: none; }
+    .search-btn { padding: 14px; justify-content: center; }
+
+    .trust-strip { padding: 10px 20px; gap: 16px; }
+    .trust-sep { display: none; }
+
+    .context-banner { padding: 10px 20px; font-size: 12px; }
+
+    /* Sidebar becomes a bottom drawer on mobile */
+    .body-wrap { flex-direction: column; }
+
+    .sidebar {
+      width: 100%;
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .sidebar.mobile-open {
+      max-height: 2000px;
+      padding: 20px 20px 28px;
+    }
+
+    .results-area { padding: 16px 16px 40px; }
+
+    /* Sticky filter bar on mobile */
+    .mobile-filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 56px;
+      z-index: 50;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mobile-filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--indigo);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mobile-sort-sel {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 10px;
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      color: var(--ink2);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .pills-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .pills-row::-webkit-scrollbar { display: none; }
+    .qpill { flex-shrink: 0; }
+
+    .results-bar { display: none; }
+
+    /* Hotel cards on mobile */
+    .hcard { border-radius: var(--radius-sm); }
+    .card-body { flex-direction: column; }
+
+    .card-thumb {
+      width: 100%;
+      flex-direction: row;
+      padding: 14px 16px;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      justify-content: flex-start;
+      gap: 14px;
+    }
+
+    .thumb-emoji { font-size: 32px; }
+    .thumb-sub { font-size: 12px; text-align: left; }
+
+    .match-ring {
+      position: static;
+      width: 34px; height: 34px;
+      font-size: 10px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .verified-chip {
+      position: static;
+      margin-left: 0;
+    }
+
+    .card-info { padding: 14px 16px; }
+    .card-name { font-size: 18px; }
+    .price-num { font-size: 22px; }
+
+    .score-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .sc-icon { font-size: 11px; }
+    .sc-lbl { font-size: 8px; letter-spacing: 0.04em; }
+    .sc-val { font-size: 13px; }
+    .sc-val span { font-size: 8px; }
+    .loc-grid { grid-template-columns: 1fr 1fr; }
+
+    .site-footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
+    .footer-links { justify-content: center; }
+  }
+
+
+  /* ── MOBILE BED BUG STRIP ── */
+  .mobile-bug-strip { display: none; background: #fff0f0; border: 1px solid var(--danger-bd); border-radius: var(--radius-sm); padding: 10px 16px; margin-bottom: 16px; cursor: pointer; }
+  .mobile-bug-strip-inner { display: flex; align-items: center; gap: 10px; }
+  .mobile-bug-strip-text { flex: 1; font-size: 12px; font-weight: 600; color: var(--danger); line-height: 1.4; }
+  .mobile-bug-strip-sub { font-size: 11px; font-weight: 400; color: rgba(232,57,74,0.65); margin-top: 1px; }
+  .mobile-bug-strip-btn { font-size: 11px; font-weight: 700; color: var(--danger); background: var(--danger-lt); border: 1px solid var(--danger-bd); border-radius: 8px; padding: 4px 10px; white-space: nowrap; }
+  @media (max-width: 768px) { .mobile-bug-strip { display: block; } .sidebar { display: none; } .body-wrap { flex-direction: column; } .results-area { padding: 16px; } }
+</style>
+</head>
+<body>
+
+<!-- ── ONBOARDING ── -->
+<div id="onboarding">
+  <span class="ob-back" id="ob-back-btn" onclick="goBack()" style="display:none">← Back</span>
+  <span class="ob-skip" onclick="skipOnboarding()">Skip to search</span>
+
+  <div class="ob-logo">
+    <div class="ob-logo-mark">🌬</div>
+    Breeze<span style="color:var(--indigo)">.</span>
+  </div>
+
+  <div class="ob-progress">
+    <div class="ob-dot active" id="dot-0"></div>
+    <div class="ob-dot" id="dot-1"></div>
+    <div class="ob-dot" id="dot-2"></div>
+    <div class="ob-dot" id="dot-3"></div>
+  </div>
+
+  <div class="ob-steps-wrap">
+  <!-- Step 1: Destination -->
+  <div class="ob-step active" id="ob-step-0">
+    <h2 class="ob-q" style="margin-bottom:32px">We make finding<br>the perfect stay a <em>Breeze.</em></h2>
+    <div class="ob-step-num" style="margin-bottom:8px">Step 1 of 4</div>
+    <div style="width:100%;position:relative">
+      <input class="ob-input" id="ob-dest" type="text" placeholder="City, country, or destination..." oninput="handleDestInput(this.value)" autocomplete="off">
+      <div class="ob-dest-suggestions" id="ob-suggestions"></div>
+    </div>
+    <div class="ob-hint">Try: Bali, Barcelona, Cape Town, Krabi, Miami Beach</div>
+    <button class="ob-next" id="ob-next-0" onclick="goStep(1)" disabled>Let's go →</button>
+  </div>
+
+  <!-- Step 2: Dates -->
+  <div class="ob-step" id="ob-step-1">
+    <div class="ob-step-num">Step 2 of 4</div>
+    <h2 class="ob-q">When are you <em>going?</em></h2>
+
+    <!-- Compact inline calendar -->
+    <div class="cal-wrap open" id="cal-wrap">
+      <div class="cal-selected-row">
+        <div class="cal-selected-box" id="cal-box-start" onclick="switchPicking('start')">
+          <div class="cal-selected-label">Check in</div>
+          <div class="cal-selected-val empty" id="cal-val-start">Select date</div>
+        </div>
+        <div class="cal-selected-box" id="cal-box-end" onclick="switchPicking('end')">
+          <div class="cal-selected-label">Check out</div>
+          <div class="cal-selected-val empty" id="cal-val-end">Select date</div>
+        </div>
+      </div>
+      <div class="cal-hint" id="cal-hint">Pick your check-in date</div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+        <div class="cal-month-name" id="cal-month-name">March 2026</div>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">&#8594;</button>
+      </div>
+      <div class="cal-weekdays">
+        <div class="cal-wd">Su</div><div class="cal-wd">Mo</div><div class="cal-wd">Tu</div>
+        <div class="cal-wd">We</div><div class="cal-wd">Th</div><div class="cal-wd">Fr</div>
+        <div class="cal-wd">Sa</div>
+      </div>
+      <div class="cal-days" id="cal-grid"></div>
+      <div class="cal-divider"></div>
+      <div class="cal-actions">
+        <button class="cal-clear" onclick="clearDates()">Clear</button>
+        <button class="cal-confirm" id="cal-confirm" onclick="confirmDates()" disabled>Confirm dates</button>
+      </div>
+    </div>
+
+    <button class="ob-next" id="ob-next-1" onclick="goStep(2)" disabled style="margin-top:16px">Continue →</button>
+  </div>
+
+  <!-- Step 3: Priorities -->
+  <div class="ob-step" id="ob-step-2">
+    <div class="ob-step-num">Step 3 of 4</div>
+    <h2 class="ob-q">What matters <em>most?</em></h2>
+    <div class="ob-hint" style="margin-bottom:20px;margin-top:-16px">Pick up to 3 priorities</div>
+    <div class="ob-priority-grid">
+      <div class="ob-priority-card" data-key="bugs" onclick="togglePriority(this)"><div class="ob-priority-icon">🪲</div><div class="ob-priority-name">Zero Bed Bug Reports</div></div>
+      <div class="ob-priority-card" data-key="bed" onclick="togglePriority(this)"><div class="ob-priority-icon">🛏</div><div class="ob-priority-name">Bed Comfort</div></div>
+      <div class="ob-priority-card" data-key="mold" onclick="togglePriority(this)"><div class="ob-priority-icon">🪣</div><div class="ob-priority-name">Cleanliness</div></div>
+      <div class="ob-priority-card" data-key="bath" onclick="togglePriority(this)"><div class="ob-priority-icon">🚿</div><div class="ob-priority-name">Bathroom Quality</div></div>
+      <div class="ob-priority-card" data-key="loc" onclick="togglePriority(this)"><div class="ob-priority-icon">📍</div><div class="ob-priority-name">Location</div></div>
+      <div class="ob-priority-card" data-key="pool" onclick="togglePriority(this)"><div class="ob-priority-icon">🏊</div><div class="ob-priority-name">Amenities</div></div>
+      <div class="ob-priority-card" data-key="social" onclick="togglePriority(this)"><div class="ob-priority-icon">🍻</div><div class="ob-priority-name">Social Vibe</div></div>
+      <div class="ob-priority-card" data-key="quiet" onclick="togglePriority(this)"><div class="ob-priority-icon">🔇</div><div class="ob-priority-name">Peace & Quiet</div></div>
+      <div class="ob-priority-card" data-key="wifi" onclick="togglePriority(this)"><div class="ob-priority-icon">📶</div><div class="ob-priority-name">WiFi</div></div>
+    </div>
+    <button class="ob-next" id="ob-next-2" onclick="goStep(3)" disabled>Continue →</button>
+  </div>
+
+  <!-- Step 4: Traveler type -->
+  <div class="ob-step" id="ob-step-3">
+    <div class="ob-step-num">Step 4 of 4</div>
+    <h2 class="ob-q">Who's <em>traveling?</em></h2>
+    <div class="ob-traveler-grid">
+      <div class="ob-traveler-opt" data-f="solo" onclick="selectTraveler(this)">🧳 Solo traveler</div>
+      <div class="ob-traveler-opt" data-f="couples" onclick="selectTraveler(this)">💑 Couples</div>
+      <div class="ob-traveler-opt" data-f="families" onclick="selectTraveler(this)">👨‍👩‍👧 Families</div>
+      <div class="ob-traveler-opt" data-f="nomad" onclick="selectTraveler(this)">🌍 Digital nomad</div>
+      <div class="ob-traveler-opt" data-f="honeymoon" onclick="selectTraveler(this)">💍 Honeymoon</div>
+      <div class="ob-traveler-opt" data-f="business" onclick="selectTraveler(this)">🤝 Business traveler</div>
+      <div class="ob-traveler-opt" data-f="pets" onclick="selectTraveler(this)">🐾 Traveling with pets</div>
+      <div class="ob-traveler-opt" data-f="accessible" onclick="selectTraveler(this)">♿ Accessible stay</div>
+    </div>
+    <button class="ob-next" id="ob-next-3" onclick="finishOnboarding()" disabled>Find my stay ✦</button>
+  </div>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="logo" onclick="restartOnboarding()">
+    <div class="logo-mark">🌬</div>
+    Breeze<span class="logo-accent">.</span>
+  </div>
+  <nav class="header-nav">
+    <a>How it works</a>
+    <a>For hotels</a>
+    <a>About</a>
+    <button class="header-cta">Submit a review</button>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-orb1"></div><div class="hero-orb2"></div><div class="hero-orb3"></div>
+  <div class="hero-eyebrow"><span class="live-dot"></span>Real scores from verified guests.</div>
+  <h1>We make finding<br>the perfect stay<br>a <em style="font-style:italic;color:var(--indigo)">Breeze.</em></h1>
+  <p class="hero-sub">We surface what other platforms hide, so you arrive with peace of mind, every time.</p>
+  <div class="search-card">
+    <div class="search-seg"><div class="search-seg-lbl">Destination</div><div class="search-seg-val" id="hero-dest">Miami Beach, FL</div></div>
+    <div class="search-seg"><div class="search-seg-lbl">Check in</div><div class="search-seg-val" id="hero-checkin">Feb 14, 2025</div></div>
+    <div class="search-seg"><div class="search-seg-lbl">Check out</div><div class="search-seg-val" id="hero-checkout">Feb 18, 2025</div></div>
+    <div class="search-seg" style="border-right:none"><div class="search-seg-lbl">Guests</div><div class="search-seg-val">2 adults</div></div>
+    <button class="search-btn">Search →</button>
+  </div>
+</section>
+
+<!-- ── TRUST STRIP ── -->
+<div class="trust-strip">
+  <div class="trust-item"><span class="trust-dot"></span>Honest results, every search.</div>
+  <span class="trust-sep">·</span>
+  <div class="trust-item"><span class="trust-dot"></span>Real-time ratings, not year-old reviews.</div>
+  <span class="trust-sep">·</span>
+  <div class="trust-item"><span class="trust-dot"></span>No hidden reports. No buried complaints.</div>
+  <span class="trust-sep">·</span>
+  <div class="trust-item"><span class="trust-dot"></span>Reviews from real guests, always.</div>
+</div>
+
+<!-- ── CONTEXT BANNER ── -->
+<div class="context-banner" id="context-banner">
+  <span id="context-dest-flag">🌴</span>
+  <span id="context-text">Showing results for Miami Beach, FL</span>
+  <span class="context-banner-tag" id="context-traveler-tag" style="display:none"></span>
+  <span style="margin-left:auto;font-size:12px;opacity:0.7;cursor:pointer" onclick="restartOnboarding()">Change search</span>
+</div>
+
+
+<!-- ── MOBILE FILTER BAR ── -->
+<div class="mobile-filter-bar" id="mobile-filter-bar" style="display:none">
+  <button class="mobile-filter-btn" onclick="toggleMobileSidebar()">
+    <span>⚙</span> <span id="mobile-filter-btn-label">Filters</span>
+  </button>
+  <select class="mobile-sort-sel" onchange="handleSort(this.value)">
+    <option value="match">Best match</option>
+    <option value="price_asc">Price: low</option>
+    <option value="price_desc">Price: high</option>
+    <option value="breeze">Breeze score</option>
+  </select>
+</div>
+
+<!-- ── BODY ── -->
+<div class="body-wrap">
+  <aside class="sidebar">
+
+    <div class="sb-sec">
+      <div class="sb-title">Price per night</div>
+      <div class="price-display" id="v-price">Up to $320</div>
+      <input type="range" class="main-range" min="80" max="600" value="320" step="10" oninput="setPrice(this.value)">
+    </div>
+
+    <div class="sb-div"></div>
+
+    <div class="bug-card">
+      <div class="bug-card-title"><span class="bug-pulse"></span>🪲 Bed bug filter</div>
+      <div class="bug-desc">No one should check under the sheets with a flashlight. We do the digging so you don't have to. Every report is verified, timestamped, and never buried.</div>
+      <div class="bug-sl-head"><span>Max reports (past 12 months)</span><span class="bug-v" id="v-bugs">0</span></div>
+      <input type="range" class="bug-range" min="0" max="5" value="0" step="1" oninput="setBugs(this.value)">
+      <div class="bug-presets">
+        <button class="bug-preset active" id="bug-0" onclick="setBugPreset(0)">Zero only</button>
+        <button class="bug-preset" id="bug-2" onclick="setBugPreset(2)">≤2 ok</button>
+        <button class="bug-preset" id="bug-5" onclick="setBugPreset(5)">Any</button>
+      </div>
+    </div>
+
+    <!-- Physical condition — 3 default, rest in more filters -->
+    <div class="sb-sec">
+      <div class="sb-title">Physical condition</div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">✨ Overall cleanliness</span><span class="sl-val" id="v-clean">4</span></div><input type="range" class="main-range" min="1" max="5" value="4" step="1" oninput="setW('clean',this.value)"></div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">🪣 Mold-free</span><span class="sl-val" id="v-mold">3</span></div><input type="range" class="main-range" min="1" max="5" value="3" step="1" oninput="setW('mold',this.value)"></div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">🚿 Bathroom quality</span><span class="sl-val" id="v-bath">3</span></div><input type="range" class="main-range" min="1" max="5" value="3" step="1" oninput="setW('bath',this.value)"></div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">🛏 Bed comfort</span><span class="sl-val" id="v-bed">3</span></div><input type="range" class="main-range" min="1" max="5" value="3" step="1" oninput="setW('bed',this.value)"></div>
+      <div id="physical-more" style="display:none">
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">💧 Water pressure</span><span class="sl-val" id="v-water">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('water',this.value)"></div>
+      </div>
+    </div>
+
+    <div class="sb-div"></div>
+
+    <!-- Experience — 2 default, rest in more filters -->
+    <div class="sb-sec">
+      <div class="sb-title">Experience</div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">🍴 Restaurant quality</span><span class="sl-val" id="v-food">3</span></div><input type="range" class="main-range" min="1" max="5" value="3" step="1" oninput="setW('food',this.value)"></div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">🍻 Social vibe</span><span class="sl-val" id="v-social">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('social',this.value)"></div>
+      <div id="experience-more" style="display:none">
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🔇 Quietness</span><span class="sl-val" id="v-quiet">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('quiet',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">❄️ Climate control</span><span class="sl-val" id="v-ac">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('ac',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🏊 Pool & amenities</span><span class="sl-val" id="v-pool">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('pool',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🏋️ Fitness center</span><span class="sl-val" id="v-gym">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('gym',this.value)"></div>
+      </div>
+    </div>
+
+    <div class="sb-div"></div>
+
+    <!-- Location — 2 default, rest in more filters -->
+    <div class="sb-sec">
+      <div class="sb-title">Location priorities</div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">🏖 Beach / waterfront</span><span class="sl-val" id="v-loc-beach">3</span></div><input type="range" class="main-range" min="1" max="5" value="3" step="1" oninput="setL('beach',this.value)"></div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">🍽 Restaurants & bars</span><span class="sl-val" id="v-loc-dining">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setL('dining',this.value)"></div>
+      <div id="location-more" style="display:none">
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🏛 Attractions & nightlife</span><span class="sl-val" id="v-loc-nightlife">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setL('nightlife',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🚌 Transit / airport</span><span class="sl-val" id="v-loc-transit">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setL('transit',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🏪 Shopping</span><span class="sl-val" id="v-loc-shop">1</span></div><input type="range" class="main-range" min="1" max="5" value="1" step="1" oninput="setL('shop',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🏃 Gym / parks</span><span class="sl-val" id="v-loc-fitness">1</span></div><input type="range" class="main-range" min="1" max="5" value="1" step="1" oninput="setL('fitness',this.value)"></div>
+      </div>
+    </div>
+
+    <div class="sb-div"></div>
+
+    <!-- Practical — 2 default, rest in more filters -->
+    <div class="sb-sec">
+      <div class="sb-title">Practical</div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">📶 WiFi reliability</span><span class="sl-val" id="v-wifi">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('wifi',this.value)"></div>
+      <div class="sl-row"><div class="sl-head"><span class="sl-name">👋 Staff friendliness</span><span class="sl-val" id="v-staff">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('staff',this.value)"></div>
+      <div id="practical-more" style="display:none">
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🚫 No hidden fees</span><span class="sl-val" id="v-fees">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('fees',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🛎 Check-in / check-out ease</span><span class="sl-val" id="v-checkin">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('checkin',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🅿️ Parking availability</span><span class="sl-val" id="v-parking">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('parking',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🔒 Room security</span><span class="sl-val" id="v-security">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('security',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">⏰ Late checkout flexibility</span><span class="sl-val" id="v-checkout">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('checkout',this.value)"></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">🚗 Airport shuttle / transport</span><span class="sl-val" id="v-shuttle">2</span></div><input type="range" class="main-range" min="1" max="5" value="2" step="1" oninput="setW('shuttle',this.value)"></div>
+      </div>
+    </div>
+
+    <div class="sb-div"></div>
+
+    <div class="more-filters-btn" id="more-filters-toggle" onclick="toggleMoreFilters()">
+      <span id="more-filters-icon">＋</span>
+      <span id="more-filters-label">More filters</span>
+    </div>
+
+  </aside>
+
+  <main class="results-area">
+    <!-- Mobile bed bug strip -->
+    <div class="mobile-bug-strip" id="mobile-bug-strip" onclick="cycleBugStrip()">
+      <div class="mobile-bug-strip-inner">
+        <span style="font-size:22px">🪲</span>
+        <div class="mobile-bug-strip-text">
+          <div id="mobile-bug-strip-title">Showing: Zero Bed Bug Reports</div>
+          <div class="mobile-bug-strip-sub">Tap to change bed bug filter</div>
+        </div>
+        <div class="mobile-bug-strip-btn" id="mobile-bug-strip-btn">Active</div>
+      </div>
+    </div>
+
+    <div class="pills-section-label">I am traveling as...</div>
+    <div class="pills-row">
+      <button class="qpill active" data-f="all" onclick="setPill(this)">✦ All</button>
+      <button class="qpill" data-f="solo" onclick="setPill(this)">🧳 Solo traveler</button>
+      <button class="qpill" data-f="couples" onclick="setPill(this)">💑 Couples</button>
+      <button class="qpill" data-f="families" onclick="setPill(this)">👨‍👩‍👧 Families</button>
+      <button class="qpill" data-f="nomad" onclick="setPill(this)">🌍 Digital nomad</button>
+      <button class="qpill" data-f="honeymoon" onclick="setPill(this)">💍 Honeymoon</button>
+      <button class="qpill" data-f="wellness" onclick="setPill(this)">🧘 Wellness</button>
+      <button class="qpill" data-f="adventure" onclick="setPill(this)">🏄 Adventure</button>
+      <button class="qpill" data-f="business" onclick="setPill(this)">🤝 Business</button>
+      <button class="qpill" data-f="pets" onclick="setPill(this)">🐾 Pet-friendly</button>
+      <button class="qpill" data-f="accessible" onclick="setPill(this)">♿ Accessible</button>
+    </div>
+    <div class="pills-section-label" style="margin-top:4px">Filter by...</div>
+    <div class="pills-row">
+      <button class="qpill" data-f="bug_free" onclick="setPill(this)">🪲 Zero Bed Bug Reports</button>
+      <button class="qpill" data-f="safe" onclick="setPill(this)">🛡 Safe area</button>
+      <button class="qpill" data-f="photos_match" onclick="setPill(this)">📸 Photos accurate</button>
+      <button class="qpill" data-f="renovated" onclick="setPill(this)">🔨 Renovated 2020+</button>
+      <button class="qpill" data-f="beach" onclick="setPill(this)">🏖 Near beach</button>
+      <button class="qpill" data-f="foodie" onclick="setPill(this)">🍴 Foodie</button>
+    </div>
+    <div class="results-bar">
+      <div class="results-lbl" id="results-lbl"><strong>0</strong> hotels</div>
+      <select class="sort-sel" onchange="handleSort(this.value)"><option value="match">Best match</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="breeze">Breeze score</option></select>
+    </div>
+    <div id="pane"></div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-logo">Breeze.</div>
+  <div>Powered by Google Places API · Booking.com Affiliate API · Bed Bug Registry · Verified guest reviews</div>
+  <div class="footer-links"><a>Privacy</a><a>Terms</a><a>For hotels</a><a>Contact</a></div>
+</footer>
+
+<script>
+// ── HOTEL DATA ──
+const allHotels = {
+  miami: [
+    {id:'m1',name:'The Edgewater Residences',loc:'South Beach, 0.2mi to ocean',price:289,emoji:'🌴',yearReno:2023,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe area',photoAccuracy:9.1,dist:{beach:0.2,dining:0.3,nightlife:0.5,transit:1.1,shop:0.8,fitness:0.4},s:{clean:9.5,mold:9.4,bath:9.1,bed:8.7,water:8.8,food:8.2,social:9.1,quiet:7.2,wifi:8.5,staff:9.2,fees:8.0,ac:9.1,pool:9.3,gym:8.2,checkin:9.2,parking:7.8,security:9.0,checkout:8.5,shuttle:8.1},alerts:[],greens:['Rooftop bar & events','Ocean views']},
+    {id:'m2',name:'Hotel Marigold',loc:'Mid-Beach, 0.6mi to ocean',price:159,emoji:'🏨',yearReno:2019,verified:true,bugReports:2,safety:'safe',safetyLabel:'Safe area',photoAccuracy:6.4,dist:{beach:0.6,dining:0.4,nightlife:0.9,transit:0.7,shop:0.6,fitness:0.8},s:{clean:6.8,mold:6.1,bath:7.4,bed:9.2,water:9.1,food:7.8,social:7.5,quiet:5.5,wifi:7.2,staff:8.4,fees:6.5,ac:7.8,pool:6.4,gym:5.9,checkin:7.2,parking:6.5,security:7.4,checkout:6.8,shuttle:5.9},alerts:['2 bed bug reports (2024)','Photos look better than reality'],greens:['Exceptional beds','Great water pressure']},
+    {id:'m3',name:'Bayside Grand',loc:'Downtown Miami, 1.4mi to ocean',price:98,emoji:'🏙',yearReno:2014,verified:false,bugReports:4,safety:'caution',safetyLabel:'Use caution at night',photoAccuracy:4.2,dist:{beach:1.4,dining:0.5,nightlife:0.6,transit:0.2,shop:0.3,fitness:1.2},s:{clean:4.5,mold:4.2,bath:4.9,bed:5.8,water:6.2,food:5.1,social:4.8,quiet:3.1,wifi:4.4,staff:6.8,fees:5.0,ac:4.1,pool:3.2,gym:3.8,checkin:4.8,parking:8.9,security:5.1,checkout:4.2,shuttle:6.4},alerts:['4 bed bug reports (2024)','Mold in east wing','Photos significantly misleading'],greens:['Great transit access']},
+    {id:'m4',name:'The Palma Suites',loc:'North Beach, 0.1mi to ocean',price:224,emoji:'🌿',yearReno:2022,verified:true,bugReports:0,safety:'safe',safetyLabel:'Very safe area',photoAccuracy:9.4,dist:{beach:0.1,dining:0.7,nightlife:1.4,transit:0.9,shop:1.1,fitness:0.2},s:{clean:9.1,mold:8.9,bath:8.6,bed:7.1,water:7.4,food:6.4,social:5.2,quiet:9.2,wifi:9.1,staff:8.8,fees:9.0,ac:9.4,pool:8.7,gym:9.1,checkin:9.5,parking:8.2,security:9.3,checkout:9.1,shuttle:7.8},alerts:[],greens:['No resort fees','Photos match perfectly']},
+    {id:'m5',name:'Coral Cove Inn',loc:'South Beach, 0.4mi to ocean',price:131,emoji:'🐚',yearReno:2021,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe area',photoAccuracy:8.6,dist:{beach:0.4,dining:0.2,nightlife:0.3,transit:0.8,shop:0.7,fitness:0.5},s:{clean:8.2,mold:7.8,bath:7.9,bed:8.4,water:7.0,food:8.8,social:8.7,quiet:6.8,wifi:7.8,staff:8.9,fees:7.5,ac:8.2,pool:8.9,gym:7.4,checkin:8.3,parking:7.1,security:8.4,checkout:7.9,shuttle:7.2},alerts:[],greens:['Lively pool bar','Photos accurate']},
+    {id:'m6',name:'Nomad House Miami',loc:'Wynwood, 1.1mi to ocean',price:112,emoji:'🏘',yearReno:2023,verified:true,bugReports:0,safety:'safe',safetyLabel:'Trendy, well-lit area',photoAccuracy:9.7,dist:{beach:1.1,dining:0.1,nightlife:0.2,transit:0.5,shop:0.4,fitness:0.3},s:{clean:8.6,mold:8.3,bath:8.0,bed:7.6,water:7.5,food:7.1,social:9.8,quiet:4.5,wifi:9.7,staff:9.1,fees:9.5,ac:8.0,pool:7.2,gym:8.8,checkin:9.3,parking:6.8,security:8.6,checkout:8.8,shuttle:7.5},alerts:['Can be noisy (social hotspot)'],greens:['Great for meeting travelers','No hidden fees']}
+  ],
+  bali: [
+    {id:'b1',name:'Sankara Ubud Resort',loc:'Ubud, rice terrace views',price:195,emoji:'🌺',yearReno:2022,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe & serene',photoAccuracy:9.5,dist:{beach:1.8,dining:0.3,nightlife:0.8,transit:1.2,shop:0.5,fitness:0.2},s:{clean:9.5,mold:9.2,bath:9.4,bed:9.5,water:8.1,food:9.3,social:7.8,quiet:9.6,wifi:8.2,staff:9.8,fees:8.5,ac:8.8,pool:9.7,gym:8.0,checkin:9.4,parking:8.0,security:9.1,checkout:9.2,shuttle:8.9},alerts:[],greens:['Infinity pool over rice terraces','On-site spa']},
+    {id:'b2',name:'Seminyak Beach Club Hotel',loc:'Seminyak, beachfront',price:178,emoji:'🏄',yearReno:2021,verified:true,bugReports:0,safety:'safe',safetyLabel:'Busy tourist area',photoAccuracy:8.8,dist:{beach:0.0,dining:0.1,nightlife:0.3,transit:1.4,shop:0.4,fitness:0.3},s:{clean:8.4,mold:8.1,bath:8.3,bed:8.0,water:7.6,food:8.9,social:9.5,quiet:5.2,wifi:8.8,staff:8.7,fees:7.2,ac:9.0,pool:9.6,gym:7.8,checkin:8.5,parking:7.5,security:8.2,checkout:7.8,shuttle:9.1},alerts:['Loud beach parties until midnight'],greens:['Steps from the ocean','Beach club access']},
+    {id:'b3',name:'The Layar Private Villas',loc:'Seminyak, 5 min to beach',price:340,emoji:'🌴',yearReno:2023,verified:true,bugReports:0,safety:'safe',safetyLabel:'Private & secure',photoAccuracy:9.8,dist:{beach:0.5,dining:0.4,nightlife:0.6,transit:1.6,shop:0.7,fitness:0.3},s:{clean:9.8,mold:9.7,bath:9.8,bed:9.6,water:9.2,food:9.1,social:6.2,quiet:9.4,wifi:9.3,staff:9.9,fees:8.0,ac:9.5,pool:9.9,gym:9.2,checkin:9.8,parking:9.5,security:9.7,checkout:9.6,shuttle:9.4},alerts:[],greens:['Private pool in every villa','Photos match perfectly']},
+    {id:'b4',name:'Kuta Budget Inn',loc:'Kuta, tourist district',price:42,emoji:'🏠',yearReno:2016,verified:false,bugReports:3,safety:'caution',safetyLabel:'Busy, watch belongings',photoAccuracy:3.8,dist:{beach:0.6,dining:0.2,nightlife:0.3,transit:0.8,shop:0.2,fitness:1.4},s:{clean:5.0,mold:5.2,bath:4.8,bed:5.5,water:5.1,food:6.2,social:7.8,quiet:3.4,wifi:5.9,staff:6.4,fees:7.5,ac:5.8,pool:4.2,gym:2.1,checkin:5.5,parking:6.8,security:5.2,checkout:4.9,shuttle:6.1},alerts:['3 bed bug reports (2024)','Noisy street-facing rooms','Photos significantly outdated'],greens:['Walkable to Kuta beach','Budget-friendly']},
+    {id:'b5',name:'Alaya Resort Ubud',loc:'Ubud, jungle setting',price:158,emoji:'🌿',yearReno:2020,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe & peaceful',photoAccuracy:9.1,dist:{beach:2.1,dining:0.4,nightlife:1.1,transit:1.5,shop:0.6,fitness:0.4},s:{clean:9.2,mold:9.0,bath:9.1,bed:9.3,water:8.4,food:8.8,social:7.2,quiet:9.5,wifi:8.6,staff:9.4,fees:8.8,ac:8.5,pool:9.2,gym:8.4,checkin:9.1,parking:8.6,security:9.0,checkout:9.0,shuttle:8.7},alerts:[],greens:['Stunning jungle views','Breakfast included']}
+  ],
+  krabi: [
+    {id:'k1',name:'Rayavadee Resort',loc:'Railay Beach, cliff-side',price:420,emoji:'🏝',yearReno:2022,verified:true,bugReports:0,safety:'safe',safetyLabel:'Exclusive, private',photoAccuracy:9.9,dist:{beach:0.0,dining:0.2,nightlife:0.8,transit:2.4,shop:1.2,fitness:0.3},s:{clean:9.9,mold:9.8,bath:9.9,bed:9.7,water:9.5,food:9.6,social:7.5,quiet:9.8,wifi:8.4,staff:9.9,fees:7.5,ac:9.6,pool:9.9,gym:9.4,checkin:9.7,parking:8.0,security:9.8,checkout:9.5,shuttle:9.8},alerts:[],greens:['Only accessible by boat','3 pools on property']},
+    {id:'k2',name:'Ao Nang Cliff Beach Resort',loc:'Ao Nang, clifftop views',price:145,emoji:'⛰',yearReno:2021,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe tourist area',photoAccuracy:8.9,dist:{beach:0.3,dining:0.4,nightlife:0.6,transit:1.1,shop:0.5,fitness:0.6},s:{clean:8.9,mold:8.6,bath:8.8,bed:8.5,water:8.0,food:8.2,social:8.1,quiet:8.4,wifi:8.9,staff:9.0,fees:8.2,ac:8.7,pool:9.1,gym:7.8,checkin:8.8,parking:8.1,security:8.5,checkout:8.4,shuttle:8.7},alerts:[],greens:['Panoramic sea views','Infinity pool']},
+    {id:'k3',name:'Krabi Town Hostel',loc:'Krabi Town, central',price:28,emoji:'🏡',yearReno:2018,verified:false,bugReports:1,safety:'safe',safetyLabel:'Safe, local area',photoAccuracy:6.2,dist:{beach:2.8,dining:0.1,nightlife:0.4,transit:0.3,shop:0.2,fitness:1.8},s:{clean:6.5,mold:6.8,bath:6.2,bed:5.9,water:6.5,food:7.5,social:9.2,quiet:5.1,wifi:8.4,staff:8.1,fees:9.2,ac:6.4,pool:3.1,gym:2.8,checkin:7.8,parking:5.4,security:6.9,checkout:7.2,shuttle:5.8},alerts:['1 bed bug report (2024)','Far from beaches'],greens:['Great social atmosphere','No resort fees']},
+    {id:'k4',name:'The Tubkaak Boutique Resort',loc:'Tubkaak Beach, secluded',price:198,emoji:'🌊',yearReno:2023,verified:true,bugReports:0,safety:'safe',safetyLabel:'Secluded & safe',photoAccuracy:9.6,dist:{beach:0.1,dining:0.6,nightlife:2.1,transit:1.8,shop:1.4,fitness:0.4},s:{clean:9.7,mold:9.5,bath:9.6,bed:9.4,water:9.0,food:9.2,social:6.8,quiet:9.7,wifi:8.7,staff:9.6,fees:8.6,ac:9.3,pool:9.8,gym:8.9,checkin:9.4,parking:8.8,security:9.5,checkout:9.2,shuttle:8.9},alerts:[],greens:['Private beach access','Mountain backdrop views']}
+  ],
+  capetown: [
+    {id:'c1',name:'The Silo Hotel',loc:'V&A Waterfront, grain silo',price:620,emoji:'🏛',yearReno:2017,verified:true,bugReports:0,safety:'safe',safetyLabel:'Secure waterfront area',photoAccuracy:9.7,dist:{beach:1.2,dining:0.1,nightlife:0.4,transit:0.8,shop:0.1,fitness:0.5},s:{clean:9.9,mold:9.9,bath:9.9,bed:9.8,water:9.6,food:9.7,social:8.2,quiet:9.3,wifi:9.5,staff:9.9,fees:8.0,ac:9.8,pool:9.6,gym:9.7,checkin:9.8,parking:9.2,security:9.9,checkout:9.5,shuttle:9.4},alerts:[],greens:['Rooftop pool','Table Mountain views']},
+    {id:'c2',name:'The Marly Boutique Hotel',loc:'Camps Bay, beachfront',price:285,emoji:'🌅',yearReno:2021,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe tourist strip',photoAccuracy:9.2,dist:{beach:0.1,dining:0.2,nightlife:0.3,transit:1.4,shop:0.6,fitness:0.3},s:{clean:9.3,mold:9.1,bath:9.2,bed:9.0,water:8.7,food:8.8,social:8.9,quiet:7.8,wifi:8.9,staff:9.3,fees:8.4,ac:9.0,pool:9.4,gym:8.6,checkin:9.1,parking:8.3,security:9.0,checkout:8.8,shuttle:8.5},alerts:[],greens:['Beachfront location','Table Mountain views']},
+    {id:'c3',name:'Cape Town Lodge',loc:'City Centre, De Waterkant',price:118,emoji:'🏙',yearReno:2019,verified:true,bugReports:0,safety:'caution',safetyLabel:'Be aware at night',photoAccuracy:7.8,dist:{beach:2.1,dining:0.3,nightlife:0.5,transit:0.4,shop:0.4,fitness:0.8},s:{clean:8.0,mold:7.9,bath:7.8,bed:7.5,water:7.2,food:7.9,social:8.4,quiet:6.8,wifi:8.1,staff:8.2,fees:8.5,ac:8.0,pool:7.2,gym:7.4,checkin:8.0,parking:7.1,security:7.6,checkout:7.8,shuttle:7.4},alerts:['Exercise caution in surrounding streets at night'],greens:['Great nightlife access','Good value for Cape Town']},
+    {id:'c4',name:'Kalk Bay Hotel',loc:'Kalk Bay, fishing village',price:162,emoji:'⚓',yearReno:2020,verified:true,bugReports:0,safety:'safe',safetyLabel:'Charming, safe village',photoAccuracy:9.0,dist:{beach:0.3,dining:0.2,nightlife:1.2,transit:0.6,shop:0.4,fitness:0.7},s:{clean:9.0,mold:8.8,bath:8.7,bed:9.0,water:8.5,food:9.1,social:7.9,quiet:8.6,wifi:8.3,staff:9.2,fees:9.0,ac:8.4,pool:6.8,gym:7.1,checkin:8.9,parking:8.5,security:8.8,checkout:9.1,shuttle:8.2},alerts:[],greens:['Fishing village location','No hidden fees']},
+    {id:'c5',name:'Bo-Kaap Guesthouse',loc:'Bo-Kaap, colorful quarter',price:89,emoji:'🎨',yearReno:2022,verified:true,bugReports:0,safety:'caution',safetyLabel:'Vibrant but watch bags',photoAccuracy:8.4,dist:{beach:1.8,dining:0.4,nightlife:0.8,transit:0.5,shop:0.6,fitness:1.1},s:{clean:8.4,mold:8.5,bath:8.2,bed:8.1,water:7.8,food:8.0,social:8.8,quiet:7.2,wifi:8.7,staff:8.9,fees:9.5,ac:7.6,pool:4.1,gym:3.8,checkin:9.0,parking:6.2,security:7.8,checkout:8.6,shuttle:6.8},alerts:[],greens:['Colorful Bo-Kaap neighborhood','Best value in Cape Town']}
+  ],
+  barcelona: [
+    {id:'ba1',name:'Hotel Arts Barcelona',loc:'Barceloneta, beachfront',price:485,emoji:'🏖',yearReno:2022,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe, upscale area',photoAccuracy:9.6,dist:{beach:0.0,dining:0.2,nightlife:0.8,transit:0.6,shop:1.1,fitness:0.3},s:{clean:9.8,mold:9.7,bath:9.8,bed:9.6,water:9.4,food:9.5,social:8.5,quiet:8.8,wifi:9.4,staff:9.7,fees:7.8,ac:9.6,pool:9.8,gym:9.5,checkin:9.6,parking:8.8,security:9.7,checkout:9.2,shuttle:8.9},alerts:['Resort fees apply'],greens:['Beachfront infinity pool','On-site restaurant']},
+    {id:'ba2',name:'Casa Camper Barcelona',loc:'El Raval, Gothic Quarter edge',price:198,emoji:'🏛',yearReno:2021,verified:true,bugReports:0,safety:'caution',safetyLabel:'El Raval, stay aware',photoAccuracy:8.7,dist:{beach:1.4,dining:0.2,nightlife:0.4,transit:0.3,shop:0.5,fitness:0.8},s:{clean:8.9,mold:8.8,bath:8.9,bed:9.1,water:8.4,food:8.5,social:8.3,quiet:7.6,wifi:9.2,staff:9.0,fees:8.8,ac:8.7,pool:7.1,gym:8.2,checkin:9.1,parking:6.4,security:8.5,checkout:8.9,shuttle:7.2},alerts:['El Raval area, pickpockets reported nearby'],greens:['Free 24hr snack bar','Gothic Quarter access']},
+    {id:'ba3',name:'Hotel 1898',loc:'Las Ramblas, historic',price:225,emoji:'🌹',yearReno:2019,verified:true,bugReports:1,safety:'caution',safetyLabel:'Las Ramblas, watch pockets',photoAccuracy:8.4,dist:{beach:1.1,dining:0.1,nightlife:0.3,transit:0.4,shop:0.3,fitness:0.9},s:{clean:8.3,mold:8.2,bath:8.4,bed:8.5,water:8.1,food:8.6,social:8.9,quiet:6.8,wifi:8.6,staff:8.8,fees:7.4,ac:8.3,pool:8.8,gym:7.6,checkin:8.4,parking:6.8,security:8.1,checkout:8.2,shuttle:7.8},alerts:['1 bed bug report (2023)','Las Ramblas pickpocket risk'],greens:['Rooftop pool','Historic building']},
+    {id:'ba4',name:'Praktik Vinoteca',loc:'Eixample, wine-themed',price:142,emoji:'🍷',yearReno:2023,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe Eixample district',photoAccuracy:9.3,dist:{beach:1.8,dining:0.2,nightlife:0.5,transit:0.3,shop:0.4,fitness:0.6},s:{clean:9.3,mold:9.2,bath:9.1,bed:8.8,water:8.6,food:9.4,social:8.6,quiet:8.1,wifi:9.0,staff:9.2,fees:9.1,ac:8.9,pool:5.2,gym:6.8,checkin:9.3,parking:7.2,security:9.0,checkout:9.0,shuttle:7.8},alerts:[],greens:['Free wine tasting daily','No resort fees']},
+    {id:'ba5',name:'Generator Barcelona',loc:'Gracia, local neighborhood',price:58,emoji:'⚡',yearReno:2020,verified:true,bugReports:0,safety:'safe',safetyLabel:'Safe, local feel',photoAccuracy:8.1,dist:{beach:2.2,dining:0.2,nightlife:0.4,transit:0.4,shop:0.5,fitness:0.7},s:{clean:7.6,mold:7.8,bath:7.5,bed:7.2,water:7.4,food:7.8,social:9.7,quiet:5.8,wifi:9.4,staff:8.6,fees:9.3,ac:7.8,pool:5.8,gym:6.4,checkin:8.9,parking:5.1,security:8.0,checkout:8.4,shuttle:6.8},alerts:[],greens:['Lively social scene','Rooftop bar']}
+  ]
+};
+
+const destConfig = {
+  miami:     {key:'miami',    label:'Miami Beach, FL',        flag:'🌊'},
+  bali:      {key:'bali',     label:'Bali, Indonesia',         flag:'🌺'},
+  krabi:     {key:'krabi',    label:'Krabi, Thailand',         flag:'🏝'},
+  capetown:  {key:'capetown', label:'Cape Town, South Africa', flag:'🦁'},
+  barcelona: {key:'barcelona',label:'Barcelona, Spain',        flag:'🇪🇸'}
+};
+
+const destSuggestions = [
+  {key:'miami',     name:'Miami Beach, FL',        sub:'Florida, United States', flag:'🌊'},
+  {key:'bali',      name:'Bali, Indonesia',         sub:'Island of the Gods',     flag:'🌺'},
+  {key:'krabi',     name:'Krabi, Thailand',         sub:'Southern Thailand',      flag:'🏝'},
+  {key:'capetown',  name:'Cape Town, South Africa', sub:'Western Cape',           flag:'🦁'},
+  {key:'barcelona', name:'Barcelona, Spain',        sub:'Catalonia',              flag:'🇪🇸'}
+];
+
+// ── STATE ──
+const W = {clean:4,mold:3,bath:3,bed:3,water:2,food:3,social:2,quiet:2,wifi:2,staff:2,fees:2,ac:2,pool:2,gym:2,checkin:2,parking:2,security:2,checkout:2,shuttle:2};
+const L = {beach:3,dining:2,nightlife:2,transit:2,shop:1,fitness:1};
+var maxBugs = 0, maxPrice = 320, activeF = 'all', currentDest = 'miami', sortMode = 'match';
+var obStep = 0, obData = {dest:'',destKey:'miami',checkin:'',checkout:'',priorities:[],traveler:null};
+
+// ── ONBOARDING ──
+function handleDestInput(val) {
+  obData.dest = val;
+  var sugg = document.getElementById('ob-suggestions');
+  var matches = destSuggestions.filter(function(d) {
+    return d.name.toLowerCase().includes(val.toLowerCase()) || d.sub.toLowerCase().includes(val.toLowerCase());
+  });
+  if (val.length < 1 || matches.length === 0) {
+    sugg.style.display = 'none';
+    document.getElementById('ob-next-0').disabled = true;
+    return;
+  }
+  sugg.style.display = 'block';
+  sugg.innerHTML = matches.map(function(d) {
+    return '<div class="ob-dest-suggestion" onclick="selectDest(\'' + d.key + '\',\'' + d.name + '\',\'' + d.flag + '\')">' +
+      '<span class="dest-flag">' + d.flag + '</span>' +
+      '<div class="dest-info"><span class="dest-name">' + d.name + '</span><span class="dest-sub">' + d.sub + '</span></div>' +
+      '</div>';
+  }).join('');
+}
+
+function selectDest(key, name, flag) {
+  obData.destKey = key;
+  obData.dest = name;
+  obData.flag = flag;
+  document.getElementById('ob-dest').value = name;
+  document.getElementById('ob-suggestions').style.display = 'none';
+  document.getElementById('ob-next-0').disabled = false;
+}
+
+function goStep(n) {
+  document.getElementById('ob-step-' + obStep).classList.remove('active');
+  document.getElementById('dot-' + obStep).classList.remove('active');
+  document.getElementById('dot-' + obStep).classList.add('done');
+  obStep = n;
+  document.getElementById('ob-step-' + n).classList.add('active');
+  document.getElementById('dot-' + n).classList.add('active');
+  document.getElementById('ob-back-btn').style.display = n > 0 ? 'flex' : 'none';
+  if (n === 1) {
+    if (!calViewYear) initCalView();
+    renderCal();
+    updateCalDisplay();
+  }
+}
+
+function goBack() {
+  if (obStep > 0) goStep(obStep - 1);
+}
+
+function togglePriority(el) {
+  var selected = document.querySelectorAll('.ob-priority-card.selected');
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    if (el.dataset.key === 'bugs') {
+      el.style.background = '#fff8f8';
+      el.style.borderColor = 'var(--danger-bd)';
+      el.style.boxShadow = '';
+      el.querySelector('.ob-priority-name').style.color = 'var(--danger)';
+      el.querySelector('.ob-priority-icon').style.filter = '';
+    }
+  } else {
+    if (selected.length >= 3) return;
+    el.classList.add('selected');
+    if (el.dataset.key === 'bugs') {
+      el.style.background = 'var(--danger)';
+      el.style.borderColor = 'var(--indigo)';
+      el.style.boxShadow = '0 0 0 3px var(--indigo-lt)';
+      el.querySelector('.ob-priority-name').style.color = 'white';
+      el.querySelector('.ob-priority-icon').style.filter = 'brightness(10)';
+    }
+  }
+  var nowSelected = document.querySelectorAll('.ob-priority-card.selected');
+  var maxed = nowSelected.length >= 3;
+  document.querySelectorAll('.ob-priority-card:not(.selected)').forEach(function(c) {
+    c.classList.toggle('maxed', maxed);
+  });
+  obData.priorities = Array.from(nowSelected).map(function(c) { return c.dataset.key; });
+  document.getElementById('ob-next-2').disabled = nowSelected.length === 0;
+}
+
+function selectTraveler(el) {
+  document.querySelectorAll('.ob-traveler-opt').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
+  obData.traveler = el.dataset.f;
+  document.getElementById('ob-next-3').disabled = false;
+}
+
+function skipOnboarding() {
+  var ob = document.getElementById('onboarding');
+  ob.style.transition = 'opacity 0.4s';
+  ob.style.opacity = '0';
+  setTimeout(function() { ob.classList.add('hidden'); }, 400);
+}
+
+function finishOnboarding() {
+  applyOnboardingToSearch();
+  var ob = document.getElementById('onboarding');
+  ob.style.transition = 'opacity 0.5s';
+  ob.style.opacity = '0';
+  setTimeout(function() { ob.classList.add('hidden'); }, 500);
+}
+
+function restartOnboarding() {
+  obStep = 0;
+  obData = {dest:'',destKey:'miami',checkin:'',checkout:'',priorities:[],traveler:null};
+  document.querySelectorAll('.ob-step').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.ob-dot').forEach(function(d) { d.classList.remove('active','done'); });
+  document.getElementById('ob-step-0').classList.add('active');
+  document.getElementById('dot-0').classList.add('active');
+  document.getElementById('ob-dest').value = '';
+  document.getElementById('ob-suggestions').style.display = 'none';
+  document.getElementById('ob-next-0').disabled = true;
+  document.querySelectorAll('.ob-priority-card').forEach(function(c) { c.classList.remove('selected','maxed'); });
+  document.querySelectorAll('.ob-traveler-opt').forEach(function(o) { o.classList.remove('selected'); });
+  document.getElementById('ob-next-2').disabled = true;
+  document.getElementById('ob-next-3').disabled = true;
+  document.getElementById('ob-back-btn').style.display = 'none';
+  var ob = document.getElementById('onboarding');
+  ob.classList.remove('hidden');
+  ob.style.opacity = '1';
+}
+
+function applyOnboardingToSearch() {
+  var destKey = obData.destKey || 'miami';
+  var conf = destConfig[destKey];
+  currentDest = destKey;
+  document.getElementById('hero-dest').textContent = conf.label;
+  if (obData.checkin) {
+    var ci = new Date(obData.checkin + 'T00:00:00');
+    document.getElementById('hero-checkin').textContent = ci.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }
+  if (obData.checkout) {
+    var co = new Date(obData.checkout + 'T00:00:00');
+    document.getElementById('hero-checkout').textContent = co.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }
+  obData.priorities.forEach(function(key) {
+    if (key === 'bugs') {
+      maxBugs = 0;
+      setBugPreset(0);
+      document.querySelectorAll('.qpill').forEach(function(p) {
+        if (p.dataset.f === 'bug_free') p.classList.add('active');
+      });
+    } else if (key === 'loc') {
+      Object.keys(L).forEach(function(k) { L[k] = 4; });
+      document.querySelectorAll('[id^="v-loc-"]').forEach(function(el) { el.textContent = '4'; });
+      document.querySelectorAll('input[oninput^="setL"]').forEach(function(el) { el.value = 4; });
+    } else if (W.hasOwnProperty(key)) {
+      W[key] = 5;
+      var el = document.getElementById('v-' + key);
+      if (el) el.textContent = '5';
+    }
+  });
+  if (obData.traveler) {
+    activeF = obData.traveler;
+    document.querySelectorAll('.qpill').forEach(function(p) {
+      p.classList.toggle('active', p.dataset.f === obData.traveler);
+    });
+    var travelerLabels = {solo:'Solo traveler',couples:'Couples',families:'Families',nomad:'Digital nomad',honeymoon:'Honeymoon',wellness:'Wellness',adventure:'Adventure',business:'Business',pets:'Pet-friendly',accessible:'Accessible'};
+    var banner = document.getElementById('context-banner');
+    if (banner) banner.classList.add('visible');
+    var ctxt = document.getElementById('context-text');
+    if (ctxt) ctxt.textContent = 'Showing results for ' + conf.label;
+    var flag = document.getElementById('context-dest-flag');
+    if (flag) flag.textContent = conf.flag;
+    var tag = document.getElementById('context-traveler-tag');
+    if (tag) { tag.textContent = travelerLabels[obData.traveler] || ''; tag.style.display = 'inline'; }
+  }
+  render();
+}
+
+// ── SCORING ──
+function breezeScore(h) {
+  var keys = Object.keys(W), tot = keys.reduce(function(s,k){return s+W[k];},0)||1;
+  return keys.reduce(function(s,k){return s+(h.s[k]||0)*W[k];},0)/tot;
+}
+function distScore(h) {
+  var keys = Object.keys(L), total = keys.reduce(function(s,k){return s+L[k];},0)||1;
+  var maxD = {beach:2,dining:1,nightlife:2,transit:1.5,shop:1.5,fitness:1.5};
+  return keys.reduce(function(s,k){return s+Math.max(0,1-(h.dist[k]/(maxD[k]||2)))*L[k];},0)/total*10;
+}
+function totalScore(h) {
+  var qScore = breezeScore(h);
+  var lW = Object.values(L).reduce(function(s,v){return s+v;},0);
+  var qW = Object.values(W).reduce(function(s,v){return s+v;},0);
+  return (qScore*qW + distScore(h)*lW)/((lW+qW)||1);
+}
+function passes(h) {
+  if (h.bugReports > maxBugs) return false;
+  if (h.price > maxPrice) return false;
+  if (activeF==='solo')      return h.s.social>=7.0 && h.safety==='safe';
+  if (activeF==='couples')   return h.s.quiet>=6.5 && h.photoAccuracy>=7.0;
+  if (activeF==='families')  return h.s.quiet>=7.0 && h.safety==='safe';
+  if (activeF==='nomad')     return h.s.wifi>=8.5 && h.s.social>=7.5;
+  if (activeF==='honeymoon') return h.photoAccuracy>=8.5 && h.s.quiet>=7.5 && h.price>=100;
+  if (activeF==='wellness')  return h.s.quiet>=8.0 && h.s.mold>=8.0;
+  if (activeF==='adventure') return h.dist.fitness<=0.5 && h.s.social>=7.0;
+  if (activeF==='business')  return h.s.wifi>=8.0 && h.safety==='safe';
+  if (activeF==='pets')      return h.bugReports===0 && h.s.bath>=7.5;
+  if (activeF==='accessible')return h.safety==='safe' && h.s.staff>=8.0;
+  if (activeF==='bug_free')  return h.bugReports===0;
+  if (activeF==='safe')      return h.safety==='safe';
+  if (activeF==='photos_match') return h.photoAccuracy>=8.5;
+  if (activeF==='renovated') return h.yearReno>=2020;
+  if (activeF==='beach')     return h.dist.beach<=0.4;
+  if (activeF==='foodie')    return h.s.food>=8.0;
+  return true;
+}
+
+// ── CONTROLS ──
+function setBugs(v) {
+  maxBugs = parseInt(v);
+  document.getElementById('v-bugs').textContent = v;
+  ['bug-0','bug-2','bug-5'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  document.getElementById(v=='0'?'bug-0':parseInt(v)<=2?'bug-2':'bug-5').classList.add('active');
+  render();
+}
+function setBugPreset(v) { document.querySelector('input.bug-range').value = v; setBugs(v); }
+function setL(k,v) { L[k]=parseInt(v); document.getElementById('v-loc-'+k).textContent=v; render(); }
+function setW(k,v) { W[k]=parseInt(v); document.getElementById('v-'+k).textContent=v; render(); }
+function setPrice(v) { maxPrice=parseInt(v); document.getElementById('v-price').textContent='Up to $'+v; render(); }
+function setPill(el) { activeF=el.dataset.f; document.querySelectorAll('.qpill').forEach(function(p){p.classList.remove('active');}); el.classList.add('active'); render(); }
+function handleSort(v) { sortMode=v; render(); }
+function toggleMoreFilters() {
+  var sections = ['physical-more','experience-more','location-more','practical-more'];
+  var isOpen = document.getElementById('physical-more').style.display === 'block';
+  sections.forEach(function(id) {
+    document.getElementById(id).style.display = isOpen ? 'none' : 'block';
+  });
+  document.getElementById('more-filters-icon').textContent = isOpen ? '＋' : '－';
+  document.getElementById('more-filters-label').textContent = isOpen ? 'More filters' : 'Fewer filters';
+}
+
+// ── RENDER ──
+function barColor(v){return v>=8?'#0eb5a0':v>=6?'#f5a623':'#e8394a';}
+function distColor(d){return d<0.3?'#0eb5a0':d<0.7?'#f5a623':'#e8394a';}
+function distLabel(d){return d<0.3?'<5 min walk':d<0.6?'~10 min':d<1.0?'~15 min':d<1.5?'~25 min':'30+ min';}
+function photoColor(v){return v>=8.5?'#0eb5a0':v>=6.5?'#f5a623':'#e8394a';}
+
+function renoBadge(y) {
+  var age = 2025 - y;
+  if (age<=3) return '<span class="tag trn">🔨 Renovated '+y+'</span>';
+  if (age<=7) return '<span class="tag trm">🔨 Renovated '+y+'</span>';
+  return '<span class="tag tro">🔨 Renovated '+y+'</span>';
+}
+
+var dimMeta = {bed:{i:'🛏',l:'Comfort'},clean:{i:'✨',l:'Cleanliness'},bath:{i:'🚿',l:'Bathroom'},food:{i:'🍴',l:'Food'},loc:{i:'📍',l:'Location'},social:{i:'🍻',l:'Social'},mold:{i:'🪣',l:'Mold'},quiet:{i:'🔇',l:'Quiet'},wifi:{i:'📶',l:'WiFi'},water:{i:'💧',l:'Water'},staff:{i:'👋',l:'Staff'},fees:{i:'🚫',l:'Fees'}};
+var locMeta = {beach:{i:'🏖',l:'Beach'},dining:{i:'🍽',l:'Dining'},nightlife:{i:'🏛',l:'Nightlife'},transit:{i:'🚌',l:'Transit'},shop:{i:'🏪',l:'Shopping'},fitness:{i:'🏃',l:'Fitness'}};
+
+function getTopDims() {
+  return ['bed', 'clean', 'bath', 'loc', 'social', 'mold'];
+}
+
+function render() {
+  var pane = document.getElementById('pane');
+  var hotels = allHotels[currentDest] || allHotels.miami;
+  var list = hotels.filter(function(h){return passes(h);});
+
+  if (sortMode==='match')      list.sort(function(a,b){return totalScore(b)-totalScore(a);});
+  else if(sortMode==='price_asc')  list.sort(function(a,b){return a.price-b.price;});
+  else if(sortMode==='price_desc') list.sort(function(a,b){return b.price-a.price;});
+  else if(sortMode==='breeze')     list.sort(function(a,b){return breezeScore(b)-breezeScore(a);});
+
+  var conf = destConfig[currentDest];
+  document.getElementById('results-lbl').innerHTML = '<strong>'+list.length+'</strong> hotel'+(list.length!==1?'s':'')+' in '+conf.label;
+
+  if (!list.length) {
+    pane.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><h3>No hotels match</h3><p>Try adjusting your filters or price range.</p></div>';
+    return;
+  }
+
+  var sortedW = getTopDims();
+  var topLoc  = Object.entries(L).sort(function(a,b){return b[1]-a[1];}).slice(0,4).map(function(e){return e[0];});
+
+  pane.innerHTML = list.map(function(h,i) {
+    var sc  = totalScore(h);
+    var bsc = breezeScore(h);
+    var isTop = i===0 && sc>7;
+    var pct = Math.round(sc*10);
+    var mc  = sc>=8?'#0eb5a0':sc>=6?'#f5a623':'#e8394a';
+    var mbg = sc>=8?'rgba(14,181,160,0.1)':sc>=6?'rgba(245,166,35,0.1)':'rgba(232,57,74,0.1)';
+    var thumbCls = sc>=8?'thumb-bg-great':sc>=6?'thumb-bg-ok':'thumb-bg-warn';
+
+    var scores = sortedW.map(function(k){
+      var v = k === 'loc' ? distScore(h) : (h.s[k] || 0);
+      var d=dimMeta[k], c=barColor(v);
+      var tenLabel = '<span style="font-size:9px;font-weight:400;opacity:0.5">/10</span>';
+      return '<div class="sc-item"><div class="sc-icon">'+d.i+'</div><div class="sc-lbl">'+d.l+'</div><div class="sc-val" style="color:'+c+'">'+v.toFixed(1)+tenLabel+'</div><div class="sc-track"><div class="sc-fill" style="width:'+(v*10)+'%;background:'+c+'"></div></div></div>';
+    }).join('');
+
+    var locs = topLoc.map(function(k){
+      var d=h.dist[k], m=locMeta[k], c=distColor(d);
+      return '<div class="loc-item"><div class="loc-dot" style="background:'+c+'"></div><span class="loc-nm">'+m.i+' '+m.l+'</span><span class="loc-d">'+distLabel(d)+'</span></div>';
+    }).join('');
+
+    var poolBadge = h.s.pool >= 8.5 ? '<span class="tag tg">🏊 Swimming pool</span>' : '';
+    var gymBadge  = h.s.gym  >= 8.0 ? '<span class="tag tg">🏋️ Fitness center</span>' : '';
+    var tags = [renoBadge(h.yearReno)].concat(
+      h.alerts.map(function(a){return '<span class="tag tr">⚠ '+a+'</span>';}),
+      h.greens.map(function(g){return '<span class="tag tg">✓ '+g+'</span>';})
+    ).join('') + poolBadge + gymBadge;
+
+    var bugSpill = h.bugReports===0
+      ? '<span class="spill sp-ok">✓ Zero bug reports</span>'
+      : '<span class="spill sp-bad">🪲 '+h.bugReports+' report'+(h.bugReports>1?'s':'')+' (12 mo)</span>';
+
+    var safeSpill = '<span class="spill '+(h.safety==='safe'?'sp-safe':'sp-caution')+'">'+(h.safety==='safe'?'● '+h.safetyLabel:'▲ '+h.safetyLabel)+'</span>';
+    var photoC = photoColor(h.photoAccuracy);
+
+    var bugBanner = h.bugReports>0
+      ? '<div class="bug-banner"><span class="bug-emoji">🪲</span><span class="bug-count">'+h.bugReports+' REPORT'+(h.bugReports>1?'S':'')+'</span><span class="bug-banner-text">Bed bug reports in the past 12 months</span></div>'
+      : '';
+
+    return '<div class="hcard'+(h.bugReports>0?' has-bugs':'')+'">' +
+      bugBanner +
+      (isTop?'<div class="top-pick"><span>✦ Best match for your priorities</span><span class="breeze-score-badge">Breeze '+bsc.toFixed(1)+'</span></div>':'') +
+      '<div class="card-body">' +
+        '<div class="card-thumb '+thumbCls+'">' +
+          '<div class="thumb-emoji">'+h.emoji+'</div>' +
+          '<div class="thumb-sub">'+h.loc.split(',')[0]+'</div>' +
+          '<div class="match-ring" style="color:'+mc+';background:'+mbg+'">'+pct+'%</div>' +
+          (h.verified?'<div class="verified-chip">✓ Verified</div>':'') +
+        '</div>' +
+        '<div class="card-info">' +
+          '<div class="card-top">' +
+            '<div><div class="card-name">'+h.name+'</div><div class="card-loc">📍 '+h.loc+'</div></div>' +
+            '<div class="price-block"><div class="price-num">$'+h.price+'</div><div class="price-lbl">per night</div></div>' +
+          '</div>' +
+          '<div class="status-row">'+safeSpill+bugSpill+'</div>' +
+          '<div class="tags-row">'+tags+'</div>' +
+          '<div class="score-grid">'+scores+'</div>' +
+          '<div class="loc-grid">'+locs+'</div>' +
+          '<div class="photo-row"><span>📸 Photos match reality</span><div class="photo-track"><div class="photo-fill" style="width:'+Math.round(h.photoAccuracy*10)+'%;background:'+photoC+'"></div></div><span class="photo-sc" style="color:'+photoC+'">'+h.photoAccuracy.toFixed(1)+'</span></div>' +
+        '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+// ── COMPACT CALENDAR ──
+var calPickStart = null, calPickEnd = null, calHover = null, calPicking = 'start';
+var calViewYear, calViewMonth;
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function initCalView() {
+  var now = new Date();
+  calViewYear = now.getFullYear();
+  calViewMonth = now.getMonth();
+}
+
+function openCal(picking) {
+  calPicking = picking || 'start';
+  if (!calViewYear) initCalView();
+  document.getElementById('cal-wrap').classList.add('open');
+  renderCal();
+  updateCalDisplay();
+}
+
+function closeCal() {
+  document.getElementById('cal-wrap').classList.remove('open');
+}
+
+function switchPicking(which) {
+  calPicking = which;
+  updateCalDisplay();
+}
+
+function changeMonth(dir) {
+  calViewMonth += dir;
+  if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+  if (calViewMonth < 0)  { calViewMonth = 11; calViewYear--; }
+  renderCal();
+}
+
+function clearDates() {
+  calPickStart = null; calPickEnd = null; calHover = null; calPicking = 'start';
+  updateCalDisplay();
+  refreshDayClasses();
+}
+
+function fmtDate(d) {
+  if (!d) return null;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+function fmtShort(d) {
+  if (!d) return null;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+
+function isoDate(d) {
+  if (!d) return '';
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+
+function sameDay(a, b) {
+  return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+function setDate(type, val) {
+  if (!val) return;
+  obData[type] = val;
+  var d = new Date(val + 'T00:00:00');
+  var label = d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  var key = type === 'checkin' ? 'checkin' : 'checkout';
+  var el = document.getElementById('ob-' + key + '-val');
+  if (el) { el.textContent = label; el.classList.remove('placeholder'); }
+  var box = document.getElementById('ob-' + key + '-box');
+  if (box) box.classList.add('filled');
+  if (obData.checkin && obData.checkout) {
+    var btn = document.getElementById('ob-next-1');
+    if (btn) btn.disabled = false;
+  }
+}
+
+function updateCalDisplay() {
+  var sv = document.getElementById('cal-val-start');
+  var ev = document.getElementById('cal-val-end');
+  var sb = document.getElementById('cal-box-start');
+  var eb = document.getElementById('cal-box-end');
+  if (!sv) return;
+  if (calPickStart) { sv.textContent = fmtShort(calPickStart); sv.classList.remove('empty'); }
+  else { sv.textContent = 'Select'; sv.classList.add('empty'); }
+  if (calPickEnd) { ev.textContent = fmtShort(calPickEnd); ev.classList.remove('empty'); }
+  else { ev.textContent = 'Select'; ev.classList.add('empty'); }
+  sb.classList.toggle('active-picking', calPicking==='start');
+  eb.classList.toggle('active-picking', calPicking==='end' || calPicking==='done');
+  var hint = document.getElementById('cal-hint');
+  if (!calPickStart) hint.textContent = 'Pick your check-in date';
+  else if (!calPickEnd) hint.textContent = 'Now pick your check-out date';
+  else hint.textContent = 'All set! Confirm or adjust below.';
+  document.getElementById('cal-confirm').disabled = !(calPickStart && calPickEnd);
+}
+
+function confirmDates() {
+  if (!calPickStart || !calPickEnd) return;
+  setDate('checkin', isoDate(calPickStart));
+  setDate('checkout', isoDate(calPickEnd));
+  document.getElementById('hero-checkin').textContent = fmtDate(calPickStart);
+  document.getElementById('hero-checkout').textContent = fmtDate(calPickEnd);
+  goStep(2);
+}
+
+function getDayClass(date, today) {
+  if (date < today) return 'cal-day disabled';
+  var cls = 'cal-day';
+  if (sameDay(date, today)) cls += ' today';
+  var isStart = sameDay(date, calPickStart);
+  var isEnd   = sameDay(date, calPickEnd);
+  var rangeEnd = calPickEnd || (calPicking==='end' ? calHover : null);
+  if (isStart && isEnd)       cls += ' selected-start selected-end';
+  else if (isStart)           cls += ' selected-start';
+  else if (isEnd)             cls += ' selected-end';
+  else if (calPickStart && rangeEnd && date > calPickStart && date < rangeEnd) cls += ' in-range';
+  return cls;
+}
+
+function refreshDayClasses() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  document.querySelectorAll('.cal-day[data-ts]').forEach(function(el) {
+    var date = new Date(parseInt(el.dataset.ts));
+    el.className = getDayClass(date, today);
+  });
+}
+
+function handleDayClick(ts) {
+  var clicked = new Date(ts);
+  var today = new Date(); today.setHours(0,0,0,0);
+  if (clicked < today) return;
+  if (calPicking === 'start' || (calPickStart && calPickEnd)) {
+    calPickStart = clicked; calPickEnd = null; calHover = null; calPicking = 'end';
+  } else if (calPicking === 'end') {
+    if (clicked <= calPickStart) { calPickStart = clicked; calPickEnd = null; calHover = null; }
+    else { calPickEnd = clicked; calHover = null; calPicking = 'done'; }
+  }
+  updateCalDisplay();
+  refreshDayClasses();
+}
+
+function handleDayHover(ts) {
+  if (calPicking !== 'end') return;
+  calHover = new Date(ts);
+  refreshDayClasses();
+}
+
+function renderCal() {
+  if (!calViewYear) initCalView();
+  var grid = document.getElementById('cal-grid');
+  var today = new Date(); today.setHours(0,0,0,0);
+  var y = calViewYear, mo = calViewMonth;
+  document.getElementById('cal-month-name').textContent = MONTHS[mo] + ' ' + y;
+  var daysInMonth = new Date(y, mo+1, 0).getDate();
+  var firstDay = new Date(y, mo, 1).getDay();
+  var html = '';
+  for (var blank = 0; blank < firstDay; blank++) html += '<div class="cal-day empty-day"></div>';
+  for (var day = 1; day <= daysInMonth; day++) {
+    var date = new Date(y, mo, day);
+    var ts = date.getTime();
+    var isPast = date < today;
+    var cls = getDayClass(date, today);
+    var handlers = isPast ? '' : 'onclick="handleDayClick('+ts+')" onmouseenter="handleDayHover('+ts+')"';
+    html += '<div class="'+cls+'" data-ts="'+ts+'" '+handlers+'>'+day+'</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function toggleMobileSidebar() {
+  var sidebar = document.querySelector('.sidebar');
+  var btn = document.getElementById('mobile-filter-btn-label');
+  var isOpen = sidebar.classList.contains('mobile-open');
+  sidebar.classList.toggle('mobile-open', !isOpen);
+  btn.textContent = isOpen ? 'Filters' : 'Close filters';
+}
+
+function showMobileFilterBar() {
+  var bar = document.getElementById('mobile-filter-bar');
+  if (bar && window.innerWidth <= 768) bar.style.display = 'flex';
+}
+
+function cycleBugStrip() {
+  var states = [
+    {val: 0, title: 'Showing: Zero Bed Bug Reports', btn: 'Active'},
+    {val: 2, title: 'Showing: 2 or fewer reports ok', btn: '≤2 ok'},
+    {val: 5, title: 'Showing: all properties', btn: 'Any'}
+  ];
+  var current = states.findIndex(function(s) { return s.val === maxBugs; });
+  var next = states[(current + 1) % states.length];
+  setBugPreset(next.val);
+  document.getElementById('mobile-bug-strip-title').textContent = next.title;
+  document.getElementById('mobile-bug-strip-btn').textContent = next.btn;
+  var strip = document.getElementById('mobile-bug-strip');
+  strip.style.background = next.val === 0 ? '#fff0f0' : next.val === 2 ? '#fff8ee' : '#f4f3fc';
+  strip.style.borderColor = next.val === 0 ? 'var(--danger-bd)' : next.val === 2 ? 'var(--gold-bd)' : 'var(--border-md)';
+  var title = document.getElementById('mobile-bug-strip-title');
+  title.style.color = next.val === 0 ? 'var(--danger)' : next.val === 2 ? 'var(--gold)' : 'var(--ink2)';
+}
+
+// ── INIT ──
+setBugPreset(0);
+render();
+showMobileFilterBar();
+window.addEventListener('resize', showMobileFilterBar);
+</script>
+</body>
+</html>
